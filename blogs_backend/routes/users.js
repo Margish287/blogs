@@ -1,12 +1,19 @@
-const express = require("express");
-const userRoute = express.Router();
-const usersController = require("../controller/users.js");
+import koaRouter from "koa-router";
+import {
+  getAllUsers,
+  registerUser,
+  loginUser,
+  deleteUser,
+  updateUser,
+  deleteAllUsers,
+} from "../controller/users.js";
+const userRoute = new koaRouter({ prefix: "/user" });
 
-userRoute
-  .get("/", usersController.getAllUsers)
-  .post("/register", usersController.registerUser)
-  .post("/login", usersController.loginUser)
-  .patch("/:blogId", usersController.updateUser)
-  .delete("/:blogId", usersController.deleteUser);
+userRoute.get("/", getAllUsers);
+userRoute.post("/register", registerUser);
+userRoute.post("/login", loginUser);
+userRoute.delete("/deleteall", deleteAllUsers);
+userRoute.put("/", updateUser);
+userRoute.delete("/delete", deleteUser);
 
-exports.userRoute = userRoute;
+export default userRoute;

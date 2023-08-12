@@ -1,47 +1,23 @@
-const express = require("express");
-const app = express();
-const { MongoClient } = require("mongodb");
-const cors = require("cors");
-const { blogsRouter } = require("./routes/blogs.js");
-const { userRoute } = require("./routes/users.js");
-const { PORT, MONGO_URI } = require("./constants.js");
+import koa from "koa";
+import bodyParser from "koa-bodyparser";
+import cors from "cors";
+import { PORT } from "./constants.js";
+import blogsRouter from "./routes/blogs.js";
+import userRoute from "./routes/users.js";
+import dbServer from "./config/mongodb.js";
+// import { authMiddleware } from "./middleware/auth.js";
 
-const client = new MongoClient(MONGO_URI);
-const databaseName = "blogs";
-
-// mongo connection
-const connectToDatabase = async () => {
-  try {
-    await client.connect();
-    console.log("Connected to Database");
-  } catch (error) {
-    console.log(`Error 1 while connecting db : ${error}`);
-  }
-};
-
-const main = async () => {
-  try {
-    await connectToDatabase();
-  } catch (error) {
-    console.log(`Error 2 while connecting db : ${error}`);
-  } finally {
-    await client.close();
-  }
-};
+const app = new koa();
+// db connection
+dbServer.connectServer();
 
 // middlewares
-app.use(express.json());
-app.use(cors());
-app.use("/blogs", blogsRouter); // blogs Routes
-app.use("/user", userRoute); // user Routes
+app.use(bodyParser());
+// app.use(authMiddleware);
+app.use(blogsRouter.routes()).use(blogsRouter.allowedMethods());
+app.use(userRoute.routes()).use(userRoute.allowedMethods());
 
-// main Routes
-app.get("/", (_, res) => {
-  res.send("Hello World");
-});
-
-// mongo connection and server listener
-main();
+// server listener
 app.listen(process.env.PORT || PORT, () => {
   console.log(`Server Running at ${PORT}`);
 });

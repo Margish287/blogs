@@ -1,13 +1,12 @@
-const express = require("express");
-const blogsRouter = express.Router();
-const blogsController = require("../controller/blogs.js");
+import KoaRouter from "koa-router";
+import blogsController from "../controller/blogs.js";
+const blogsRouter = new KoaRouter({ prefix: "/blogs" });
 
-blogsRouter
-  .post("/create", blogsController.createBlog)
-  .get("/", blogsController.getAllBlogs)
-  .get("/:blogId", blogsController.getBlog)
-  .put("/:blogId", blogsController.replaceBlog)
-  .patch("/:blogId", blogsController.updateBlog)
-  .delete("/:blogId", blogsController.deleteBlog);
+blogsRouter.get("/", blogsController.getAllBlogs);
+blogsRouter.post("/create", blogsController.createBlog);
+blogsRouter.get("/:blogId", blogsController.getBlog);
+blogsRouter.patch("/:blogId", blogsController.updateBlog);
+blogsRouter.delete("/:blogId", blogsController.deleteBlog);
+// .put("/:blogId", blogsController.replaceBlog)
 
-exports.blogsRouter = blogsRouter;
+export default blogsRouter;
