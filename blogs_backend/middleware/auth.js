@@ -17,6 +17,10 @@ const authMiddleware = (ctx, next) => {
   }
   console.log({ isTokenValid });
 
+  ctx.state.user = {
+    id: isTokenValid._id,
+    email: isTokenValid.email,
+  };
   return next();
 };
 

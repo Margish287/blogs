@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import {
   addUserQuery,
   deleteAllUserQuery,
+  deleteUserQuery,
   getUserQuery,
   updateUserQuery,
 } from "../modal/user.js";
@@ -65,10 +66,9 @@ const registerUser = async (ctx) => {
     const userData = await addUserQuery(userSignUpDetails);
     if (userData.acknowledged) {
       jwtToken = jwt.sign(
-        { id: userData.insertedId.toString() },
+        { id: userData.insertedId.toString(), email },
         process.env.JWT_SECRET || JWT_SECRET
       );
-      console.log();
       sendResponse(ctx, 201, {
         status: 201,
         status: "success",
@@ -155,18 +155,10 @@ const loginUser = async (ctx) => {
 
 const updateUser = async (ctx) => {
   const updateObj = ctx.request.body;
-  const token = ctx.request.headers.authorization.split(" ")[1];
   try {
-    const verifiedToken = jwt.verify(
-      token,
-      process.env.JWT_SECRET || JWT_SECRET
-    );
-    if (!verifiedToken) {
-      throw new Error("Token is not valid");
-    }
-
+    const { id } = ctx.state.user;
     const updatedUserRes = await updateUserQuery(
-      { _id: new BSON.ObjectId(data.id) },
+      { _id: new BSON.ObjectId(id) },
       { $set: updateObj }
     );
 
@@ -186,22 +178,18 @@ const updateUser = async (ctx) => {
   }
 };
 
-const deleteUser = (ctx) => {
-  const token = ctx.request.headers?.authorization?.split(" ")[1];
-
+const deleteUser = async (ctx) => {
+  const { id } = ctx.state.user;
   try {
-    if (!token) {
-      throw new Error("Token not found");
+    const deleteRes = await deleteUserQuery({ _id: new BSON.ObjectId(id) });
+    if (deleteRes.acknowledged) {
+      sendResponse(ctx, 200, {
+        message: "User removed successfully",
+        status: "success",
+      });
+    } else {
+      throw new Error("Something went wornge while deleting user.");
     }
-
-    const verifiedToken = jwt.verify(token, JWT_SECRET);
-    if (!verifiedToken) {
-      throw new Error("Token is not valid");
-    }
-    sendResponse(ctx, 200, {
-      message: "User removed successfully",
-      status: "success",
-    });
   } catch (error) {
     sendResponse(ctx, 400, { message: error.message, status: "failed" });
   }
