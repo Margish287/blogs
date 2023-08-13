@@ -15,6 +15,7 @@ const authMiddleware = (ctx, next) => {
   if (!isTokenValid) {
     ctx.throw(401, { message: "Token is not valid", status: "failed" });
   }
+  console.log({ isTokenValid });
 
   return next();
 };

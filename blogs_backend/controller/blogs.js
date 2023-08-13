@@ -11,9 +11,9 @@ import {
 import { sendResponse } from "../utils/sendResponse.js";
 
 const createBlog = async (ctx) => {
-  const blog = ctx.request.body;
+  const { title, content, tags } = ctx.request.body;
   try {
-    await insertBlog(blog);
+    await insertBlog({ title, content, tags });
     return sendResponse(ctx, 201, {
       success: true,
       message: "Blog created successfully",
@@ -25,7 +25,7 @@ const createBlog = async (ctx) => {
 
 const getAllBlogs = async (ctx) => {
   // for pagination
-  // const { page, limit } = ctx.query;
+  // const { page = 1, limit } = ctx.query;
   // const skip = (page - 1) * limit;
   // const blogs = await findBlog({}, skip, limit);
   // const total = await countBlog({});

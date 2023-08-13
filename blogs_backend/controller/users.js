@@ -9,6 +9,7 @@ import {
 import { sendResponse } from "../utils/sendResponse.js";
 import { BSON } from "mongodb";
 import { JWT_SECRET } from "../constants.js";
+import { validateUserDetails } from "../utils/validate.js";
 
 const getAllUsers = (_, res) => {
   res.json(data.users);
@@ -44,8 +45,16 @@ const registerUser = async (ctx) => {
     return;
   }
 
-  // TODO : validate the email, username, password before sotring in the database
+  const validUser = validateUserDetails({ username, password, email });
   try {
+    if (!validUser.isValidUser) {
+      sendResponse(ctx, 400, {
+        status: "failed",
+        message: validUser.message,
+      });
+      return;
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const userSignUpDetails = {
       email: email.toLowerCase(),
@@ -92,10 +101,18 @@ const loginUser = async (ctx) => {
     return;
   }
 
-  // TODO : validate the email, username, password before sotring in the database
+  const validUser = validateUserDetails({ email, password, username });
 
   // find user in the database
   try {
+    if (!validUser.isValidUser) {
+      sendResponse(ctx, 400, {
+        status: "failed",
+        message: validUser.message,
+      });
+      return;
+    }
+
     const user = await getUserQuery({ email: email.toLowerCase() });
     if (!user) {
       sendResponse(ctx, 400, {
