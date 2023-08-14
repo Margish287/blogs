@@ -15,10 +15,9 @@ const authMiddleware = (ctx, next) => {
   if (!isTokenValid) {
     ctx.throw(401, { message: "Token is not valid", status: "failed" });
   }
-  console.log({ isTokenValid });
 
   ctx.state.user = {
-    id: isTokenValid._id,
+    id: isTokenValid.id,
     email: isTokenValid.email,
   };
   return next();

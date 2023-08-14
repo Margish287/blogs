@@ -9,15 +9,22 @@ import {
   findBlogById,
 } from "../modal/blog.js";
 import { sendResponse } from "../utils/sendResponse.js";
+import { getUserByIdQuery, getUserQuery } from "../modal/user.js";
 
 const createBlog = async (ctx) => {
   const { title, content, tags } = ctx.request.body;
+  const { id, email } = ctx.state.user;
   try {
-    await insertBlog({ title, content, tags });
-    return sendResponse(ctx, 201, {
-      success: true,
-      message: "Blog created successfully",
-    });
+    const user = await getUserByIdQuery({ _id: new BSON.ObjectId(id) });
+    if (user) {
+      await insertBlog({ title, content, tags });
+      return sendResponse(ctx, 201, {
+        success: true,
+        message: "Blog created successfully",
+      });
+    } else {
+      throw new Error("User is not valid");
+    }
   } catch (error) {
     return sendResponse(ctx, 400, { success: false, message: error.message });
   }
@@ -74,16 +81,23 @@ const getBlog = async (ctx) => {
 const updateBlog = async (ctx) => {
   const { blogId } = ctx.request.params;
   const { title, content } = ctx.request.body;
-  const blog = await editBlog(
-    { _id: new BSON.ObjectId(blogId) },
-    { title, content }
-  );
+  const { id, email } = ctx.state.user;
+
   try {
-    return sendResponse(ctx, 200, {
-      blog,
-      message: "Blog updated",
-      success: true,
-    });
+    const user = await getUserQuery({ _id: new BSON.ObjectId(id) });
+    if (user) {
+      const blog = await editBlog(
+        { _id: new BSON.ObjectId(blogId) },
+        { title, content }
+      );
+      sendResponse(ctx, 200, {
+        blog,
+        message: "Blog updated",
+        success: true,
+      });
+    } else {
+      throw new Error("User is not valid");
+    }
   } catch (error) {
     sendResponse(ctx, 400, { success: false, message: error.message });
   }
@@ -91,14 +105,20 @@ const updateBlog = async (ctx) => {
 
 const deleteBlog = async (ctx) => {
   const { blogId } = ctx.request.body;
-  await dltBlog({ _id: new BSON.ObjectId(blogId) });
-  const blogs = await findBlog({});
+  const { id, email } = ctx.state.user;
+
   try {
-    return sendResponse(ctx, 200, {
-      blogs,
-      message: "Blog deleted",
-      success: true,
-    });
+    const user = await getUserByIdQuery({ _id: new BSON.ObjectId(id) });
+    if (user) {
+      await dltBlog({ _id: new BSON.ObjectId(blogId) });
+      sendResponse(ctx, 200, {
+        blogs,
+        message: "Blog deleted",
+        success: true,
+      });
+    } else {
+      throw new Error("User is not valid");
+    }
   } catch (error) {
     sendResponse(ctx, 400, { success: false, message: error.message });
   }
