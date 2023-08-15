@@ -1,6 +1,4 @@
-const sendResponse = (ctx, statusCode, data) => {
-  ctx.status = statusCode;
-  ctx.body = data;
+export const sendResponse = (ctx, statusCode, data) => {
+  ctx.status = statusCode || 500;
+  ctx.body = { message: "Internal server error", success: false };
 };
-
-export { sendResponse };

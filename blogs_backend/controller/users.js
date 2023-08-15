@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { v4 as uuid4 } from "uuid";
 import {
   addUserQuery,
   deleteAllUserQuery,
@@ -10,7 +11,10 @@ import {
 import { sendResponse } from "../utils/sendResponse.js";
 import { BSON } from "mongodb";
 import { JWT_SECRET } from "../constants.js";
-import { validateUserDetails } from "../utils/validate.js";
+import {
+  checkIfUserIsAlreadyExist,
+  validateUserDetails,
+} from "../utils/validate.js";
 
 const getAllUsers = (_, res) => {
   res.json(data.users);
@@ -22,13 +26,13 @@ const deleteAllUsers = async (ctx) => {
     console.log("deleted count :", res.deletedCount);
     sendResponse(ctx, 200, {
       status: 200,
-      status: "success",
+      success: true,
       message: "All users deleted",
     });
   } catch (error) {
     sendResponse(ctx, 400, {
       status: 400,
-      status: "success",
+      success: true,
       message: "something went wrong while deleting all users",
     });
   }
@@ -36,11 +40,12 @@ const deleteAllUsers = async (ctx) => {
 
 const registerUser = async (ctx) => {
   let jwtToken;
+  let role;
   const { email, password, username } = ctx.request.body;
+
   if (!email || !password || !username) {
     sendResponse(ctx, 400, {
-      status: 400,
-      status: "failed",
+      success: false,
       message: "Please fill in all the fields",
     });
     return;
@@ -48,45 +53,51 @@ const registerUser = async (ctx) => {
 
   const validUser = validateUserDetails({ username, password, email });
   try {
+    const isUserExist = await checkIfUserIsAlreadyExist(email, username);
+    if (isUserExist)
+      ctx.throw(400, { message: "User is already exist!", success: false });
+
     if (!validUser.isValidUser) {
       sendResponse(ctx, 400, {
-        status: "failed",
+        success: false,
         message: validUser.message,
       });
       return;
     }
 
+    role = "O";
+    // TODO : check valid role here
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const userSignUpDetails = {
+      _id: uuid4(),
       email: email.toLowerCase(),
       username,
       password: hashedPassword,
+      role,
     };
 
     const userData = await addUserQuery(userSignUpDetails);
     if (userData.acknowledged) {
       jwtToken = jwt.sign(
-        { id: userData.insertedId.toString(), email },
+        { id: userData.insertedId.toString(), email, role },
         process.env.JWT_SECRET || JWT_SECRET
       );
       sendResponse(ctx, 201, {
-        status: 201,
         status: "success",
         jwtToken,
         message: "User created successfully",
       });
     } else {
       sendResponse(ctx, 400, {
-        status: 400,
-        status: "failed",
+        success: false,
         message: "something went wrong while creating the user",
       });
     }
   } catch (error) {
     sendResponse(ctx, 400, {
-      status: 400,
-      status: "failed",
-      message: "something went wrong while creating the user",
+      success: false,
+      message: error.message,
     });
   }
 };
@@ -95,7 +106,7 @@ const loginUser = async (ctx) => {
   const { username, password, email } = ctx.request.body;
   if (!username || !password || !email) {
     sendResponse(ctx, 400, {
-      status: "failed",
+      success: false,
       message: "Please fill in all the fields",
     });
     return;
@@ -107,7 +118,7 @@ const loginUser = async (ctx) => {
   try {
     if (!validUser.isValidUser) {
       sendResponse(ctx, 400, {
-        status: "failed",
+        success: false,
         message: validUser.message,
       });
       return;
@@ -116,7 +127,7 @@ const loginUser = async (ctx) => {
     const user = await getUserQuery({ email: email.toLowerCase() });
     if (!user) {
       sendResponse(ctx, 400, {
-        status: "failed",
+        success: false,
         message: "User not found",
       });
       return;
@@ -126,7 +137,7 @@ const loginUser = async (ctx) => {
     const isCorrectPassword = await bcrypt.compare(password, user.password);
     if (!isCorrectPassword) {
       sendResponse(ctx, 400, {
-        status: "failed",
+        success: false,
         message: "Invalid credentials",
       });
       return;
@@ -137,34 +148,35 @@ const loginUser = async (ctx) => {
       {
         id: user._id.toString(),
         email: user.userEmail,
+        role: user.role,
       },
       process.env.JWT_SECRET || JWT_SECRET
     );
     sendResponse(ctx, 200, {
-      status: "success",
+      success: true,
       jwtToken,
       message: "User logged in successfully",
     });
   } catch (error) {
     sendResponse(ctx, 400, {
-      status: "failed",
+      success: false,
       message: error.message,
     });
   }
 };
 
 const updateUser = async (ctx) => {
-  const updateObj = ctx.request.body;
+  const { username, password } = ctx.request.body;
   try {
     const { id } = ctx.state.user;
     const updatedUserRes = await updateUserQuery(
-      { _id: new BSON.ObjectId(id) },
-      { $set: updateObj }
+      { _id: id },
+      { $set: { username, password } }
     );
 
     if (updatedUserRes.acknowledged) {
       sendResponse(ctx, 200, {
-        status: "success",
+        success: true,
         message: "User updated successfully",
       });
     } else {
@@ -172,7 +184,7 @@ const updateUser = async (ctx) => {
     }
   } catch (error) {
     sendResponse(ctx, 400, {
-      status: "failed",
+      success: false,
       message: error.message,
     });
   }
@@ -185,13 +197,13 @@ const deleteUser = async (ctx) => {
     if (deleteRes.acknowledged) {
       sendResponse(ctx, 200, {
         message: "User removed successfully",
-        status: "success",
+        success: true,
       });
     } else {
       throw new Error("Something went wornge while deleting user.");
     }
   } catch (error) {
-    sendResponse(ctx, 400, { message: error.message, status: "failed" });
+    sendResponse(ctx, 400, { message: error.message, success: false });
   }
 };
 

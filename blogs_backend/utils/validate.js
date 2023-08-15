@@ -1,3 +1,5 @@
+import { getUserQuery } from "../modal/user.js";
+
 export const validateUserDetails = ({
   username = "",
   password = "",
@@ -39,4 +41,21 @@ export const validateUserDetails = ({
     message: "User data is valid",
     isValidUser: true,
   };
+};
+
+export const validateUpdateUserDetails = (userObj) => {
+  console.log(userObj);
+};
+
+export const checkIfUserIsAlreadyExist = async (userObj) => {
+  let user = null;
+  if (username && email) {
+    user = await getUserQuery({ email, username });
+  } else if (email) {
+    user = await getUserQuery({ email });
+  } else if (username) {
+    user = await getUserQuery({ username });
+  }
+
+  return user ? true : false;
 };
