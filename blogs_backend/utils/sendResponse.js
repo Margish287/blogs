@@ -1,4 +1,4 @@
 export const sendResponse = (ctx, statusCode, data) => {
   ctx.status = statusCode || 500;
-  ctx.body = { message: "Internal server error", success: false };
+  ctx.body = data || { message: "Internal server error", success: false };
 };
