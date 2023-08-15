@@ -6,8 +6,8 @@ const blogsRouter = new KoaRouter({ prefix: "/blogs" });
 blogsRouter.get("/", blogsController.getAllBlogs);
 blogsRouter.post("/create", authMiddleware, blogsController.createBlog);
 blogsRouter.get("/:blogId", blogsController.getBlog);
-blogsRouter.patch("/:blogId", authMiddleware, blogsController.updateBlog);
-blogsRouter.delete("/:blogId", authMiddleware, blogsController.deleteBlog);
+blogsRouter.patch("/", authMiddleware, blogsController.updateBlog);
+blogsRouter.delete("/", authMiddleware, blogsController.deleteBlog);
 // .put("/:blogId", blogsController.replaceBlog)
 
 export default blogsRouter;
