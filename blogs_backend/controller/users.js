@@ -78,7 +78,7 @@ const registerUser = async (ctx) => {
   const userData = await addUserQuery(userSignUpDetails);
   if (userData.acknowledged) {
     jwtToken = jwt.sign(
-      { id: userData.insertedId.toString(), email, role },
+      { id: userData.insertedId.toString(), role },
       process.env.JWT_SECRET || JWT_SECRET
     );
 
@@ -197,6 +197,15 @@ const deleteUser = async (ctx) => {
   }
 };
 
+// for invite user
+const inviteUser = (ctx) => {
+  console.log(ctx.state.user);
+  sendResponse(ctx, 200, {
+    message: "User invited successfully",
+    success: true,
+  });
+};
+
 export {
   getAllUsers,
   deleteAllUsers,
@@ -204,4 +213,5 @@ export {
   loginUser,
   updateUser,
   deleteUser,
+  inviteUser,
 };

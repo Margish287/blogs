@@ -20,7 +20,8 @@ const authMiddleware = (ctx, next) => {
 
   ctx.state.user = {
     id: isTokenValid.id,
-    email: isTokenValid.email,
+    role: isTokenValid.role,
+    ownerId: isTokenValid.id,
   };
   return next();
 };
