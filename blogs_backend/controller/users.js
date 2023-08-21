@@ -89,35 +89,6 @@ const registerUser = async (ctx) => {
   }
 };
 
-const registerTeamMember = async (ctx) => {
-  const { password, username } = ctx.request.body;
-  const { email, role, ownerId } = ctx.state.user;
-
-  const hashedPassword = bcrypt.hash(password, 10);
-  const userObj = {
-    email,
-    hashedPassword,
-    role,
-    ownerId,
-    username,
-  };
-  const user = await addUserQuery(userObj);
-  if (!user.acknowledged) {
-    return ctx.throw(400, {
-      message: "Something went wrong !",
-      success: false,
-    });
-  }
-
-  const deleteInvUser = await deleteInviteUserQuery({ email });
-  if (!deleteInvUser.acknowledged) {
-    return ctx.throw(400, {
-      message: "Something went wrong !",
-      success: false,
-    });
-  }
-};
-
 const loginUser = async (ctx) => {
   const { username, password, email } = ctx.request.body;
   if (!username || !password || !email) {
@@ -269,6 +240,64 @@ const inviteUser = async (ctx) => {
   });
 };
 
+const registerTeamMember = async (ctx) => {
+  const { password, username } = ctx.request.body;
+  const { email, role, ownerId } = ctx.state.user;
+
+  const hashedPassword = bcrypt.hash(password, 10);
+  const userObj = {
+    email,
+    hashedPassword,
+    role,
+    ownerId,
+    username,
+  };
+  const user = await addUserQuery(userObj);
+  if (!user.acknowledged) {
+    return ctx.throw(400, {
+      message: "Something went wrong !",
+      success: false,
+    });
+  }
+
+  const deleteInvUser = await deleteInviteUserQuery({ email });
+  if (!deleteInvUser.acknowledged) {
+    return ctx.throw(400, {
+      message: "Something went wrong !",
+      success: false,
+    });
+  }
+};
+
+const acceptInvitation = async (ctx) => {
+  const { role, email, ownerId } = ctx.state.user;
+
+  const deleteInvUser = await deleteInviteUserQuery({ email, role });
+  if (!deleteInvUser.acknowledged) {
+    ctx.throw(400, {
+      message: "Unable to delete invited user !",
+      success: false,
+    });
+  }
+
+  if (!deleteInvUser.deletedCount) {
+    ctx.throw(400, {
+      message: "Invitation already accepted !",
+      success: false,
+    });
+  }
+
+  const updateUser = await updateUserQuery({ email }, { ownerId, role });
+  if (!updateUser.acknowledged) {
+    return ctx.throw(400, {
+      message: "Unable to update user !",
+      success: false,
+    });
+  }
+
+  return sendResponse(ctx, 200, "user added sucessfully");
+};
+
 export {
   getAllUsers,
   deleteAllUsers,
@@ -278,4 +307,5 @@ export {
   deleteUser,
   inviteUser,
   registerTeamMember,
+  acceptInvitation,
 };

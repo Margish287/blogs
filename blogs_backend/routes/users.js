@@ -8,6 +8,7 @@ import {
   deleteAllUsers,
   inviteUser,
   registerTeamMember,
+  acceptInvitation,
 } from "../controller/users.js";
 import { authMiddleware } from "../middleware/auth.js";
 import { validateUser } from "../middleware/validateUser.js";
@@ -28,4 +29,5 @@ userRoute.post(
   inviteTokenValidator,
   registerTeamMember
 );
+userRoute.get("/accept/:inviteToken", inviteTokenValidator, acceptInvitation);
 export default userRoute;
