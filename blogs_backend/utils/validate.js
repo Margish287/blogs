@@ -69,3 +69,6 @@ export const checkIfUserIsAlreadyExist = async (email = "", username = "") => {
 
   return user ? true : false;
 };
+
+export const validateEmail = (email) =>
+  email.match(emailRegex) ? true : false;

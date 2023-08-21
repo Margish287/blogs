@@ -1,5 +1,6 @@
 import koa from "koa";
 import bodyParser from "koa-bodyparser";
+import env from "dotenv";
 import cors from "cors";
 import errorHandler from "koa-json-error";
 import { PORT } from "./constants.js";
@@ -10,6 +11,7 @@ import { sendResponse } from "./utils/sendResponse.js";
 import { formateError } from "./utils/formateError.js";
 
 const app = new koa();
+env.config();
 // db connection
 dbServer.connectServer();
 

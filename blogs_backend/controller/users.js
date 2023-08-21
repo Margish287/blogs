@@ -1,8 +1,9 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { v4 as uuid4 } from "uuid";
+import { v4 as uuid4, validate } from "uuid";
 import {
   addUserQuery,
+  countUser,
   deleteAllUserQuery,
   deleteUserQuery,
   getUserQuery,
@@ -10,12 +11,19 @@ import {
 } from "../modal/user.js";
 import { sendResponse } from "../utils/sendResponse.js";
 import { BSON } from "mongodb";
-import { JWT_SECRET } from "../constants.js";
+import { API_URL, JWT_SECRET } from "../constants.js";
 import {
   checkIfUserIsAlreadyExist,
+  validateEmail,
   validateUpdateUserDetails,
   validateUserDetails,
 } from "../utils/validate.js";
+import {
+  deleteInviteUserQuery,
+  findInvirtedUserQeury,
+  inviteUserQuery,
+} from "../modal/inviteUser.js";
+import { sendMail } from "../utils/sendMail.js";
 
 const getAllUsers = (_, res) => {
   res.json(data.users);
@@ -42,25 +50,11 @@ const deleteAllUsers = async (ctx) => {
 const registerUser = async (ctx) => {
   let jwtToken;
   let role;
-  const { email, password, username } = ctx.request.body;
-  if (!email || !password || !username) {
-    sendResponse(ctx, 400, {
-      success: false,
-      message: "Please fill all the fields",
-    });
-    return;
-  }
 
-  const validUser = validateUserDetails({ username, password, email });
+  const { email, password, username } = ctx.state.user;
   const isUserExist = await checkIfUserIsAlreadyExist(email, username);
   if (isUserExist)
     ctx.throw(400, { message: "User is already exist!", success: false });
-
-  if (!validUser.isValidUser)
-    ctx.throw(400, {
-      success: false,
-      message: validUser.message,
-    });
 
   role = "O";
   // TODO : check valid role here
@@ -91,6 +85,35 @@ const registerUser = async (ctx) => {
     ctx.throw(400, {
       success: false,
       message: "something went wrong while creating the user",
+    });
+  }
+};
+
+const registerTeamMember = async (ctx) => {
+  const { password, username } = ctx.request.body;
+  const { email, role, ownerId } = ctx.state.user;
+
+  const hashedPassword = bcrypt.hash(password, 10);
+  const userObj = {
+    email,
+    hashedPassword,
+    role,
+    ownerId,
+    username,
+  };
+  const user = await addUserQuery(userObj);
+  if (!user.acknowledged) {
+    return ctx.throw(400, {
+      message: "Something went wrong !",
+      success: false,
+    });
+  }
+
+  const deleteInvUser = await deleteInviteUserQuery({ email });
+  if (!deleteInvUser.acknowledged) {
+    return ctx.throw(400, {
+      message: "Something went wrong !",
+      success: false,
     });
   }
 };
@@ -198,9 +221,49 @@ const deleteUser = async (ctx) => {
 };
 
 // for invite user
-const inviteUser = (ctx) => {
-  console.log(ctx.state.user);
-  sendResponse(ctx, 200, {
+const inviteUser = async (ctx) => {
+  const { email, role } = ctx.request.body;
+  const { ownerId, role: currentUserType } = ctx.state.user;
+
+  // validate email
+  const isValidEmail = validateEmail(email);
+  if (!isValidEmail) {
+    return ctx.throw(400, {
+      message: "Email is not valid.",
+      success: false,
+    });
+  }
+
+  // check if user is already invited
+  const invitedUser = await findInvirtedUserQeury({ email, ownerId });
+  if (invitedUser) {
+    return ctx.throw(400, {
+      message: "User is already invited.",
+      success: false,
+    });
+  }
+
+  const isUserExist = await countUser({ email });
+
+  const inviteToken = jwt.sign({ email, role, ownerId }, JWT_SECRET);
+  const invitationLink = isUserExist
+    ? `${API_URL}/user/accept/${inviteToken}}`
+    : `${API_URL}/user/register/${inviteToken}}`;
+
+  const inviteUserRes = await inviteUserQuery({
+    ownerId,
+    email,
+  });
+
+  if (!inviteUserRes.acknowledged) {
+    return ctx.throw(400, {
+      message: "User invitation failed !",
+    });
+  }
+
+  await sendMail(email, invitationLink);
+  return sendResponse(ctx, 200, {
+    inviteLink: invitationLink,
     message: "User invited successfully",
     success: true,
   });
@@ -214,4 +277,5 @@ export {
   updateUser,
   deleteUser,
   inviteUser,
+  registerTeamMember,
 };

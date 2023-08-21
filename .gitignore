@@ -1,2 +1,4 @@
 blogs_backend/node_modules
 blogs_frontend/node_modules
+
+blogs_backend/.env
