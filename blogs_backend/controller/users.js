@@ -165,30 +165,14 @@ const deleteUser = async (ctx) => {
 
 // for invite user
 const inviteUser = async (ctx) => {
-  const { email, role } = ctx.request.body;
-  const { ownerId, role: currentUserType } = ctx.state.user;
-
-  // validate email
-  const isValidEmail = validateEmail(email);
-  if (!isValidEmail) {
-    return ctx.throw(400, {
-      message: "Email is not valid.",
-      success: false,
-    });
-  }
-
-  // check if user is already invited
-  const invitedUser = await findInvirtedUserQeury({ email, ownerId });
-  if (invitedUser) {
-    return ctx.throw(400, {
-      message: "User is already invited.",
-      success: false,
-    });
-  }
-
-  const isUserExist = await countUser({ email });
+  const { ownerId } = ctx.state.user;
+  const { email, role } = ctx.state.invitedUserObj;
 
   const inviteToken = jwt.sign({ email, role, ownerId }, JWT_SECRET);
+
+  // checks if in inviteUser collection perticular user is there or not
+  const isUserExist = await countUser({ email, role });
+
   const invitationLink = isUserExist
     ? `${API_URL}/user/accept/${inviteToken}}`
     : `${API_URL}/user/register/${inviteToken}}`;

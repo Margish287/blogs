@@ -1,4 +1,6 @@
+import { findInvirtedUserQeury } from "../modal/inviteUser.js";
 import {
+  validateEmail,
   validateUpdateUserDetails,
   validateUserDetails,
 } from "../utils/validate.js";
@@ -46,6 +48,35 @@ export const validateUpdateUser = (ctx, next) => {
     username,
   };
   ctx.state.userObj = userObj;
+
+  return next();
+};
+
+export const validateInviteUser = async (ctx, next) => {
+  const { email, role } = ctx.request.body;
+  const { ownerId } = ctx.state.user;
+  // validate email
+  const isValidEmail = validateEmail(email);
+  if (!isValidEmail) {
+    return ctx.throw(400, {
+      message: "Email is not valid.",
+      success: false,
+    });
+  }
+
+  // check if user is already invited
+  const invitedUser = await findInvirtedUserQeury({ email, ownerId });
+  if (invitedUser) {
+    return ctx.throw(400, {
+      message: "User is already invited.",
+      success: false,
+    });
+  }
+
+  ctx.state.invitedUserObj = {
+    email,
+    role,
+  };
 
   return next();
 };

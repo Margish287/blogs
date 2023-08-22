@@ -9,7 +9,7 @@ const addUserQuery = async (data) => await User.insertOne(data);
 const deleteUserQuery = async (data) => await User.deleteOne(data);
 const updateUserQuery = async (id, data) => await User.updateOne(id, data);
 const deleteAllUserQuery = async () => await User.deleteMany({});
-const countUser = async (data) => await User.countDoucmnets(data);
+const countUser = async (data) => await User.countDocuments(data);
 
 export {
   getUserByIdQuery,

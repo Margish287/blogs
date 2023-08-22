@@ -18,6 +18,7 @@ dbServer.connectServer();
 // Error handling
 app.use(errorHandler(formateError));
 app.on("error", (error, ctx) => {
+  console.log(error);
   sendResponse(ctx, error.status, {
     message: error.message,
     success: error.success,

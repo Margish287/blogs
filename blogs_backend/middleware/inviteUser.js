@@ -1,3 +1,6 @@
+import jwt from "jsonwebtoken";
+import { JWT_SECRET } from "../constants.js";
+
 export const inviteTokenValidator = (ctx, next) => {
   const invitetoken = ctx.params.invitetoken;
   const verifyInvitetoken = jwt.verify(

@@ -12,6 +12,7 @@ import {
 } from "../controller/users.js";
 import { authMiddleware } from "../middleware/auth.js";
 import {
+  validateInviteUser,
   validateUpdateUser,
   validateUser,
 } from "../middleware/validateUser.js";
@@ -26,7 +27,7 @@ userRoute.put("/", authMiddleware, validateUpdateUser, updateUser);
 userRoute.delete("/delete", authMiddleware, deleteUser);
 
 // invite user
-userRoute.post("/invite", authMiddleware, inviteUser);
+userRoute.post("/invite", authMiddleware, validateInviteUser, inviteUser);
 userRoute.post(
   "/register/:invitetoken",
   inviteTokenValidator,
