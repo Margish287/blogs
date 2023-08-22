@@ -21,7 +21,7 @@ export const authMiddleware = (ctx, next) => {
   ctx.state.user = {
     id: isTokenValid.id,
     role: isTokenValid.role,
-    ownerId: isTokenValid.id,
+    ownerId: isTokenValid.ownerId || isTokenValid.id,
   };
   return next();
 };

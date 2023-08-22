@@ -1,6 +1,4 @@
-import { BSON } from "mongodb";
 import { v4 as uuid4 } from "uuid";
-// import data from "../blogsData.js";
 import {
   findBlog,
   insertBlog,
@@ -14,7 +12,7 @@ import { getUserByIdQuery, getUserQuery } from "../modal/user.js";
 
 const createBlog = async (ctx) => {
   const { title, content, tags } = ctx.request.body;
-  const { id } = ctx.state.user;
+  const { id, ownerId } = ctx.state.user;
 
   const user = await getUserByIdQuery({ _id: id });
   if (!user) {
@@ -28,6 +26,11 @@ const createBlog = async (ctx) => {
     title,
     content,
     tags,
+    createdBy: id,
+    createdAt: new Date(),
+    lastEdited: new Date(),
+    lastEditedBy: id,
+    ownerId,
   };
   const createBlogRes = await insertBlog(blogObj);
   if (!createBlogRes.acknowledged) {
