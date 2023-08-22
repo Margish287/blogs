@@ -200,10 +200,11 @@ const registerTeamMember = async (ctx) => {
   const { password, username } = ctx.request.body;
   const { email, role, ownerId } = ctx.state.user;
 
-  const hashedPassword = bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(password, 10);
   const userObj = {
+    _id: uuid4(),
     email,
-    hashedPassword,
+    password: hashedPassword,
     role,
     ownerId,
     username,
@@ -223,6 +224,11 @@ const registerTeamMember = async (ctx) => {
       success: false,
     });
   }
+
+  return sendResponse(ctx, 200, {
+    message: "invite user registered successfully",
+    success: true,
+  });
 };
 
 const acceptInvitation = async (ctx) => {

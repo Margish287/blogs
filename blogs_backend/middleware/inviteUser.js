@@ -1,7 +1,8 @@
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../constants.js";
+import { getUserQuery } from "../modal/user.js";
 
-export const inviteTokenValidator = (ctx, next) => {
+export const inviteTokenValidator = async (ctx, next) => {
   const invitetoken = ctx.params.invitetoken;
   const verifyInvitetoken = jwt.verify(
     invitetoken,
@@ -13,7 +14,16 @@ export const inviteTokenValidator = (ctx, next) => {
       success: false,
     });
   }
+
   const { email, role, ownerId } = verifyInvitetoken;
+  const inviteUser = await getUserQuery({ email });
+  if (inviteUser) {
+    return ctx.throw(400, {
+      message: "User is already register",
+      success: false,
+    });
+  }
+
   ctx.state.user = { email, role, ownerId };
   return next();
 };
