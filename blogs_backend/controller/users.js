@@ -90,25 +90,9 @@ const registerUser = async (ctx) => {
 };
 
 const loginUser = async (ctx) => {
-  const { username, password, email } = ctx.request.body;
-  if (!username || !password || !email) {
-    ctx.throw(400, {
-      success: false,
-      message: "Please fill all the fields",
-    });
-  }
-
-  const validUser = validateUserDetails({ email, password, username });
-
+  const { email, password, username } = ctx.state.user;
   // find user in the database
-  if (!validUser.isValidUser) {
-    ctx.throw(400, {
-      success: false,
-      message: validUser.message,
-    });
-  }
-
-  const user = await getUserQuery({ email: email.toLowerCase(), username });
+  const user = await getUserQuery({ email, username });
   if (!user) {
     ctx.throw(400, {
       success: false,
@@ -142,53 +126,41 @@ const loginUser = async (ctx) => {
 };
 
 const updateUser = async (ctx) => {
-  const { username, password } = ctx.request.body;
-  let userObj = {};
-  if (username) userObj["username"] = username;
-  if (password) userObj["password"] = password;
-
-  const validUser = validateUpdateUserDetails(userObj);
-  if (!validUser.isValidUser) {
-    ctx.throw(400, {
-      success: false,
-      message: "User details is not valid",
-    });
-  }
-
-  if (userObj.username) {
-    const hashedPassword = await bcrypt.hash(password, 10);
+  const { userObj } = ctx.state;
+  if (userObj.password) {
+    const hashedPassword = await bcrypt.hash(userObj.password, 10);
     userObj.password = hashedPassword;
   }
 
   const { id } = ctx.state.user;
   const updatedUserRes = await updateUserQuery({ _id: id }, { $set: userObj });
 
-  if (updatedUserRes.acknowledged) {
-    sendResponse(ctx, 200, {
-      success: true,
-      message: "User updated successfully",
-    });
-  } else {
-    ctx.throw(400, {
+  if (!updatedUserRes.acknowledged) {
+    return ctx.throw(400, {
       success: false,
       message: "Unsuccessfull attempt of updating user.",
     });
   }
+
+  return sendResponse(ctx, 200, {
+    success: true,
+    message: "User updated successfully",
+  });
 };
 
 const deleteUser = async (ctx) => {
   const { id } = ctx.state.user;
   const deleteRes = await deleteUserQuery({ _id: id });
-  if (deleteRes.acknowledged) {
-    sendResponse(ctx, 200, {
-      message: "User removed successfully",
-      success: true,
-    });
-  } else {
-    ctx.throw(400, {
+  if (!deleteRes.acknowledged) {
+    return ctx.throw(400, {
       message: "Unable to remove user's infomation !",
     });
   }
+
+  return sendResponse(ctx, 200, {
+    message: "User removed successfully",
+    success: true,
+  });
 };
 
 // for invite user

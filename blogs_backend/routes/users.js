@@ -11,15 +11,18 @@ import {
   acceptInvitation,
 } from "../controller/users.js";
 import { authMiddleware } from "../middleware/auth.js";
-import { validateUser } from "../middleware/validateUser.js";
+import {
+  validateUpdateUser,
+  validateUser,
+} from "../middleware/validateUser.js";
 import { inviteTokenValidator } from "../middleware/inviteUser.js";
 const userRoute = new koaRouter({ prefix: "/user" });
 
 userRoute.get("/", getAllUsers);
 userRoute.post("/register", validateUser, registerUser);
-userRoute.post("/login", loginUser);
+userRoute.post("/login", validateUser, loginUser);
 userRoute.delete("/deleteall", deleteAllUsers);
-userRoute.put("/", authMiddleware, updateUser);
+userRoute.put("/", authMiddleware, validateUpdateUser, updateUser);
 userRoute.delete("/delete", authMiddleware, deleteUser);
 
 // invite user
