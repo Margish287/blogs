@@ -18,6 +18,8 @@ export const authMiddleware = (ctx, next) => {
     ctx.throw(401, { message: "Unauthorized user !", success: false });
   }
 
+  // TODO : verify user in auth middleware by getUserQuery
+
   ctx.state.user = {
     id: isTokenValid.id,
     role: isTokenValid.role,

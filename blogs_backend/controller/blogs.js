@@ -47,6 +47,7 @@ const createBlog = async (ctx) => {
 
 const getAllBlogs = async (ctx) => {
   // for pagination
+  // TODO : sort the blogs by id or anything
   // const { page = 1, limit } = ctx.query;
   // const skip = (page - 1) * limit;
   // const blogs = await findBlog({}, skip, limit);
@@ -94,6 +95,7 @@ const updateBlog = async (ctx) => {
   const { blogId, title, content } = ctx.request.body;
   const { id } = ctx.state.user;
 
+  // TODO : remove this
   const user = await getUserQuery({ _id: id });
   if (!user) {
     ctx.throw(400, {

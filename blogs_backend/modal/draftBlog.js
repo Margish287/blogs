@@ -1,4 +1,4 @@
-import db from "../config/mongodb";
+import db from "../config/mongodb.js";
 const Draft = db.getDb().collection("drafts");
 
 export const createDraftQuery = async (data) => await Draft.insertOne(data);
