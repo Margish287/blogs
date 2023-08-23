@@ -6,12 +6,7 @@ const blogsRouter = new KoaRouter({ prefix: "/blogs" });
 
 blogsRouter.get("/", blogsController.getAllBlogs);
 
-blogsRouter.post(
-  "/create",
-  authMiddleware,
-  roleBasedBlogAccess(["O", "A"]),
-  blogsController.createBlog
-);
+blogsRouter.post("/create", authMiddleware, blogsController.createBlog);
 
 blogsRouter.get("/:blogId", blogsController.getBlog);
 
