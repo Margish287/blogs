@@ -9,6 +9,8 @@ import {
 } from "../modal/blog.js";
 import { sendResponse } from "../utils/sendResponse.js";
 import { getUserByIdQuery, getUserQuery } from "../modal/user.js";
+import db from "../config/mongodb.js";
+const Blog = db.getDb().collection("blogs");
 
 const createBlog = async (ctx) => {
   const { title, content, tags } = ctx.request.body;
@@ -46,14 +48,18 @@ const createBlog = async (ctx) => {
 };
 
 const getAllBlogs = async (ctx) => {
+  const { page = 1, limit = 10, search = "" } = ctx.query;
+  // TODO : add filter by owner and its team member
+
   // for pagination
-  // TODO : sort the blogs by id or anything
-  // const { page = 1, limit } = ctx.query;
-  // const skip = (page - 1) * limit;
-  // const blogs = await findBlog({}, skip, limit);
-  // const total = await countBlog({});
-  // return sendResponse(ctx, 200, { blogs, total });
-  const blogs = await findBlog({});
+  const skip = (+page - 1) * +limit;
+  console.log({ page, limit, skip });
+  const blogs = await Blog.find({ title: { $regex: search, $options: "i" } })
+    .sort({ title: 1 })
+    .skip(+skip)
+    .limit(+limit)
+    .toArray();
+  const total = await countBlog({});
 
   if (!blogs.length) {
     ctx.throw(200, {
@@ -61,7 +67,7 @@ const getAllBlogs = async (ctx) => {
       message: "No blogs to display",
     });
   }
-  sendResponse(ctx, 200, { success: true, blogs });
+  sendResponse(ctx, 200, { success: true, blogs, total });
 };
 
 const getBlog = async (ctx) => {
