@@ -1,13 +1,14 @@
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../constants.js";
+import { getUserByIdQuery } from "../modal/user.js";
 
-export const authMiddleware = (ctx, next) => {
+export const authMiddleware = async (ctx, next) => {
   console.log("authMiddleware");
   // get the jwt token from the header
   const { authorization } = ctx.request.headers;
   const token = authorization?.split(" ")[1];
   if (!token || !authorization) {
-    ctx.throw(401, { message: "Unauthorized user !", success: false });
+    return ctx.throw(401, { message: "Unauthorized user !", success: false });
   }
 
   // token verification
@@ -19,6 +20,13 @@ export const authMiddleware = (ctx, next) => {
   }
 
   // TODO : verify user in auth middleware by getUserQuery
+  const isUserExist = await getUserByIdQuery({ _id: isTokenValid.id });
+  if (!isUserExist) {
+    return ctx.throw(404, {
+      message: "User not found",
+      success: false,
+    });
+  }
 
   ctx.state.user = {
     id: isTokenValid.id,
