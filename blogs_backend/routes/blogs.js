@@ -1,10 +1,10 @@
 import KoaRouter from "koa-router";
 import blogsController from "../controller/blogs.js";
-import { authMiddleware } from "../middleware/auth.js";
+import { authMiddleware, getOwnerIdForAuthUser } from "../middleware/auth.js";
 import { roleBasedBlogAccess } from "../middleware/blogsMiddleware.js";
 const blogsRouter = new KoaRouter({ prefix: "/blogs" });
 
-blogsRouter.get("/", blogsController.getAllBlogs);
+blogsRouter.get("/", getOwnerIdForAuthUser, blogsController.getAllBlogs);
 
 blogsRouter.post("/create", authMiddleware, blogsController.createBlog);
 

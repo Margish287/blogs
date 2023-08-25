@@ -35,3 +35,23 @@ export const authMiddleware = async (ctx, next) => {
   };
   return next();
 };
+
+export const getOwnerIdForAuthUser = (ctx, next) => {
+  const { authorization } = ctx.request.headers;
+  const token = authorization?.split(" ")[1];
+  let isTokenValid;
+  if (token) {
+    try {
+      isTokenValid = jwt.verify(token, process.env.JWT_SECRET || JWT_SECRET);
+      ctx.state.user = {
+        id: isTokenValid.id,
+        role: isTokenValid.role,
+        ownerId: isTokenValid.ownerId || isTokenValid.id,
+      };
+    } catch (error) {
+      return ctx.throw(401, { message: "Unauthorized user !", success: false });
+    }
+  }
+
+  return next();
+};

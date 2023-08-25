@@ -48,18 +48,34 @@ const createBlog = async (ctx) => {
 };
 
 const getAllBlogs = async (ctx) => {
-  const { page = 1, limit = 10, search = "" } = ctx.query;
-  // TODO : add filter by owner and its team member
+  const { page = 1, limit = 10, search = "", filterBy = "" } = ctx.query;
+  // TODO : filter by ownerId
 
   // for pagination
   const skip = (+page - 1) * +limit;
   console.log({ page, limit, skip });
-  const blogs = await Blog.find({ title: { $regex: search, $options: "i" } })
-    .sort({ title: 1 })
-    .skip(+skip)
-    .limit(+limit)
-    .toArray();
+  let blogs;
   const total = await countBlog({});
+
+  if (ctx.state.user && filterBy === "team") {
+    const { ownerId } = ctx.state.user;
+    blogs = await Blog.find({
+      $or: [{ ownerId }, { _id: ownerId }],
+      title: { $regex: search, $options: "i" },
+    })
+      .sort({ title: 1 })
+      .skip(+skip)
+      .limit(+limit)
+      .toArray();
+  } else {
+    blogs = await Blog.find({
+      title: { $regex: search, $options: "i" },
+    })
+      .sort({ title: 1 })
+      .skip(+skip)
+      .limit(+limit)
+      .toArray();
+  }
 
   if (!blogs.length) {
     ctx.throw(200, {
