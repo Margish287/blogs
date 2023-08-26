@@ -114,7 +114,7 @@ const getBlog = async (ctx) => {
 // };
 
 const updateBlog = async (ctx) => {
-  const { blogId, title, content } = ctx.request.body;
+  const { blogId, title = "", content = "", tags = [] } = ctx.request.body;
   const { id } = ctx.state.user;
 
   // TODO : remove this
@@ -126,8 +126,19 @@ const updateBlog = async (ctx) => {
     });
   }
 
-  const blog = await editBlog({ _id: blogId }, { $set: { title, content } });
-  if (!blog.acknowledged && !blog.modifiedCount) {
+  let blogToUpdate = {};
+  if (title) blogToUpdate["title"] = title;
+  if (content) blogToUpdate["content"] = content;
+  if (tags.length) blogToUpdate["tags"] = [...tags];
+
+  blogToUpdate["lastEdited"] = new Date();
+  blogToUpdate["lastEditedBy"] = id;
+
+  const blog = await editBlog(
+    { _id: blogId, ownerId: id },
+    { $set: blogToUpdate }
+  );
+  if (!blog.modifiedCount) {
     ctx.throw(400, {
       message: "Something went wrong while updating a blog.",
       success: false,

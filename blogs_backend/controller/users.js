@@ -115,6 +115,7 @@ const loginUser = async (ctx) => {
       id: user._id.toString(),
       email: user.userEmail,
       role: user.role,
+      ownerId: user.ownerId || user._id,
     },
     process.env.JWT_SECRET || JWT_SECRET
   );
