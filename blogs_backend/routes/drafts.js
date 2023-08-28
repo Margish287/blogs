@@ -6,12 +6,38 @@ import {
   getDraft,
   updateDraft,
 } from "../controller/drafts.js";
-import { checkDraftAccess } from "../middleware/draftMiddleware.js";
+import {
+  checkDraftAccess,
+  checkMembershipForDrafts,
+} from "../middleware/draftMiddleware.js";
 const draftRouter = new koaRouter({ prefix: "/draft" });
 
-draftRouter.get("/", authMiddleware, checkDraftAccess, getDraft);
-draftRouter.post("/create", authMiddleware, createDraft);
-draftRouter.put("/", authMiddleware, checkDraftAccess, updateDraft);
-draftRouter.delete("/", authMiddleware, checkDraftAccess, deleteDraft);
+draftRouter.get(
+  "/",
+  authMiddleware,
+  checkMembershipForDrafts,
+  checkDraftAccess,
+  getDraft
+);
+draftRouter.post(
+  "/create",
+  authMiddleware,
+  checkMembershipForDrafts,
+  createDraft
+);
+draftRouter.put(
+  "/",
+  authMiddleware,
+  checkMembershipForDrafts,
+  checkDraftAccess,
+  updateDraft
+);
+draftRouter.delete(
+  "/",
+  authMiddleware,
+  checkMembershipForDrafts,
+  checkDraftAccess,
+  deleteDraft
+);
 
 export default draftRouter;

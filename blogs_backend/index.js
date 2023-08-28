@@ -1,18 +1,16 @@
 import koa from "koa";
 import bodyParser from "koa-bodyparser";
 import env from "dotenv";
-import cors from "cors";
+env.config();
+// import cors from "cors";
 import errorHandler from "koa-json-error";
 import { PORT } from "./constants.js";
-import blogsRouter from "./routes/blogs.js";
-import userRoute from "./routes/users.js";
-import draftRouter from "./routes/drafts.js";
+import setupAPI from "./routes/index.js";
 import dbServer from "./config/mongodb.js";
 import { sendResponse } from "./utils/sendResponse.js";
 import { formateError } from "./utils/formateError.js";
 
 const app = new koa();
-env.config();
 // db connection
 dbServer.connectServer();
 
@@ -28,9 +26,9 @@ app.on("error", (error, ctx) => {
 
 // middlewares
 app.use(bodyParser());
-app.use(blogsRouter.routes()).use(blogsRouter.allowedMethods());
-app.use(userRoute.routes()).use(userRoute.allowedMethods());
-app.use(draftRouter.routes()).use(draftRouter.allowedMethods());
+
+// Routes
+setupAPI(app);
 
 // server listener
 app.listen(process.env.PORT || PORT, () => {

@@ -51,7 +51,7 @@ const registerUser = async (ctx) => {
   let jwtToken;
   let role;
 
-  const { email, password, username } = ctx.state.user;
+  const { email, password, username, membershipData } = ctx.state.user;
   const isUserExist = await checkIfUserIsAlreadyExist(email, username);
   if (isUserExist)
     ctx.throw(400, { message: "User is already exist!", success: false });
@@ -67,6 +67,7 @@ const registerUser = async (ctx) => {
     password: hashedPassword,
     role,
     createdAt: new Date(),
+    membershipData,
   };
 
   const userData = await addUserQuery(userSignUpDetails);
@@ -169,14 +170,17 @@ const inviteUser = async (ctx) => {
   const { ownerId } = ctx.state.user;
   const { email, role } = ctx.state.invitedUserObj;
 
-  const inviteToken = jwt.sign({ email, role, ownerId }, JWT_SECRET);
+  const inviteToken = jwt.sign(
+    { email, role, ownerId },
+    process.env.JWT_SECRET || JWT_SECRET
+  );
 
   // checks if in inviteUser collection perticular user is there or not
   const isUserExist = await countUser({ email, role });
 
   const invitationLink = isUserExist
-    ? `${API_URL}/user/accept/${inviteToken}}`
-    : `${API_URL}/user/register/${inviteToken}}`;
+    ? `${process.env.API_URL || API_URL}/user/accept/${inviteToken}}`
+    : `${process.env.API_URL || API_URL}/user/register/${inviteToken}}`;
 
   const inviteUserRes = await inviteUserQuery({
     ownerId,

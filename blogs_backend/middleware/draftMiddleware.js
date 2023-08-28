@@ -22,3 +22,22 @@ export const checkDraftAccess = async (ctx, next) => {
   ctx.state.draft = draft;
   await next();
 };
+
+export const checkMembershipForDrafts = (ctx, next) => {
+  const { membershipData } = ctx.state.user;
+  if (!membershipData) {
+    return ctx.throw(400, {
+      message: "Could not get user data ! please try later",
+      success: false,
+    });
+  }
+
+  if (!membershipData.enableDraft) {
+    return ctx.throw(400, {
+      message: "Buy higher plan for Drafts !",
+      success: false,
+    });
+  }
+
+  return next();
+};

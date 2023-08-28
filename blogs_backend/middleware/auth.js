@@ -32,6 +32,7 @@ export const authMiddleware = async (ctx, next) => {
     id: isTokenValid.id,
     role: isTokenValid.role,
     ownerId: isTokenValid.ownerId || isTokenValid.id,
+    membershipData: isUserExist?.membershipData,
   };
   return next();
 };

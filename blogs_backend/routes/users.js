@@ -13,6 +13,7 @@ import {
 import { authMiddleware } from "../middleware/auth.js";
 import {
   validateInviteUser,
+  getMembershipData,
   validateUpdateUser,
   validateUser,
 } from "../middleware/validateUser.js";
@@ -20,7 +21,7 @@ import { inviteTokenValidator } from "../middleware/inviteUser.js";
 const userRoute = new koaRouter({ prefix: "/user" });
 
 userRoute.get("/", getAllUsers);
-userRoute.post("/register", validateUser, registerUser);
+userRoute.post("/register", validateUser, getMembershipData, registerUser);
 userRoute.post("/login", validateUser, loginUser);
 userRoute.delete("/deleteall", deleteAllUsers);
 userRoute.put("/", authMiddleware, validateUpdateUser, updateUser);
