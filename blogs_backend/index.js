@@ -32,5 +32,5 @@ setupAPI(app);
 
 // server listener
 app.listen(process.env.PORT || PORT, () => {
-  console.log(`Server Running at ${PORT}`);
+  console.log(`Server Running at ${process.env.PORT || PORT}`);
 });

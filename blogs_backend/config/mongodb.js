@@ -1,5 +1,7 @@
 import { MongoClient } from "mongodb";
 import { MONGO_URI } from "../constants.js";
+import env from "dotenv";
+env.config();
 const dbName = "blogs_db";
 
 const client = new MongoClient(process.env.MONGO_URI || MONGO_URI);
